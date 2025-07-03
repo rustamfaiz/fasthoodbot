@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router, types, Bot
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -32,3 +32,40 @@ async def start_handler(message: types.Message):
 
     await message.answer(text, reply_markup=builder.as_markup(), disable_web_page_preview=True)
 
+@router.callback_query(lambda c: c.data == "about_book")
+async def about_book(callback: types.CallbackQuery, bot: Bot):
+    builder = InlineKeyboardBuilder()
+    builder.button(text="🔴 Получить книгу", callback_data="get_book")
+    builder.button(text="🔵 Вернуться", callback_data="back_to_start")
+    builder.adjust(1)
+
+    text = (
+        "Это не книга. Это прямой удар по всем фитнес-мифам, на которых ты сливал годы.\n"
+        "Без мотивационных соплей, без “всё получится”, без брокколи на пару.\n\n"
+        "Здесь — метод.\n"
+        "4 месяца. Без голода. Без бега. Без возврата жира.\n\n"
+        "Вот что ты получаешь:\n"
+        "▪️ Пошаговый план жиросжигания, собранный по физиологии, а не по мнению тренеров\n"
+        "▪️ Программа питания, где есть мясо, хлеб, нормальные продукты — и при этом жир уходит\n"
+        "▪️ Полная система тренировок — три фазы, весь зал, расписано по неделям\n"
+        "▪️ Разбор, почему диеты всегда проваливаются — и как не повторить ту же яму\n"
+        "▪️ Честный ответ, почему “ПП” не работает, и что работает вместо\n"
+        "▪️ Формулу удержания формы — чтобы не набрать обратно, даже если жизнь снова начнёт валиться\n"
+        "▪️ Понимание тела — как оно реально тратит жир, что делает инсулин, и как управлять аппетитом\n"
+        "▪️ Новое тело. Реально. За 4 месяца. Без воды. Без отката. Без иллюзий."
+    )
+
+    await callback.message.edit_text(text, disable_web_page_preview=True)
+    await bot.send_photo(
+        chat_id=callback.from_user.id,
+        photo="https://cdn.openai.com/chat-assets/fast-hood/morfius1.jpg",
+        reply_markup=builder.as_markup()
+    )
+
+@router.callback_query(lambda c: c.data == "back_to_start")
+async def back_to_start(callback: types.CallbackQuery):
+    await start_handler(callback.message)
+
+@router.callback_query(lambda c: c.data == "get_book")
+async def get_book(callback: types.CallbackQuery):
+    await callback.message.answer("⏳ Раздел в разработке. Скоро продолжим.")
