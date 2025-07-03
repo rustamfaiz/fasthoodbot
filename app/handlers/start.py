@@ -58,7 +58,7 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
     await callback.message.edit_text(text, disable_web_page_preview=True)
     await bot.send_photo(
         chat_id=callback.from_user.id,
-        photo="https://cdn.openai.com/chat-assets/fast-hood/morfius1.jpg",
+        photo="https://i.imgur.com/jX4pQcI.jpeg",
         reply_markup=builder.as_markup()
     )
 
