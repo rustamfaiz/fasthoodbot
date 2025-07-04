@@ -19,3 +19,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+from handlers import test_generate
+...
+dp.include_router(test_generate.router)
