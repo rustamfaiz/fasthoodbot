@@ -2,6 +2,7 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import FSInputFile
 from utils.pdf_generator import generate_personal_pdf
 
 import random
@@ -76,26 +77,23 @@ async def ask_phone(message: types.Message, state: FSMContext):
 # Шаг 8 — Получили телефон, генерируем PDF
 @router.message(Form.waiting_for_phone)
 async def generate_and_send(message: types.Message, state: FSMContext):
-    import os
-    import random
-    from aiogram.types import FSInputFile
-    from utils.pdf_generator import generate_personal_pdf
-
-    data = await state.get_data()
-    full_name = data["full_name"]
-    phone = message.text
-
-    await message.answer("📚 Генерируем твою именную книгу...")
-
-    # Пути к файлам
-    input_path = "files/тест книги.pdf"
-    output_path = f"files/generated_{random.randint(1000, 9999)}.pdf"
+    print("⚙️ generate_and_send START")  # лог в консоль
 
     try:
+        data = await state.get_data()
+        full_name = data.get("full_name", "Имя неизвестно")
+        phone = message.text
+
+        await message.answer("📚 Генерируем твою именную книгу...")
+
+        # Пути к файлам
+        input_path = "files/тест книги.pdf"
+        output_path = f"files/generated_{random.randint(1000, 9999)}.pdf"
+
         # Генерация PDF
         pdf_path = generate_personal_pdf(input_path, output_path, full_name, phone)
 
-        # Проверка существования и отправка файла
+        # Проверка файла
         if pdf_path and os.path.exists(pdf_path):
             await message.answer_document(FSInputFile(pdf_path))
             await message.answer(
@@ -105,9 +103,10 @@ async def generate_and_send(message: types.Message, state: FSMContext):
                 "Присылай фото в новом теле и отмечай @rustam_faiz 😉"
             )
         else:
-            await message.answer("❌ Ошибка при генерации книги. Файл не найден. Напиши @rustam_faiz.")
+            await message.answer("❌ Ошибка: файл не найден. Напиши @rustam_faiz.")
 
     except Exception as e:
-        await message.answer(f"❌ Ошибка при генерации: {e}")
+        await message.answer(f"❌ Произошла ошибка при генерации: {e}")
+        print(f"❌ Ошибка generate_and_send: {e}")
 
     await state.clear()
