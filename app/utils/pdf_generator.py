@@ -39,7 +39,7 @@ def generate_personal_pdf(input_path: str, output_path: str, full_name: str, pho
                     phone_number,
                     fontsize=40,
                     color=(0.9, 0.9, 0.9),
-                    rotate=45,
+                    rotate=90,  # 🔧 исправлено
                     align=1,
                     overlay=True
                 )
