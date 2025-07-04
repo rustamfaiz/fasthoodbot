@@ -22,3 +22,18 @@ async def handle_get_book(callback: CallbackQuery):
         document=FSInputFile(output_path),
         caption="📘 Вот твоя именная книга. Приятного чтения!"
     )
+@router.callback_query(F.data == "paid")
+async def handle_paid(callback: CallbackQuery):
+    user = callback.from_user
+    full_name = user.full_name
+    phone = str(callback.message.chat.id)
+
+    input_path = "files/тест книги.pdf"
+    output_path = f"files/book_{user.id}.pdf"
+
+    generate_personal_pdf(input_path, output_path, full_name, phone)
+
+    await callback.message.answer_document(
+        document=FSInputFile(output_path),
+        caption="📘 Вот твоя именная книга. Приятного чтения!"
+    )
