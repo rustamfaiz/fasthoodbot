@@ -4,6 +4,9 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from utils.pdf_generator import generate_personal_pdf
 
+import random
+import os
+
 router = Router()
 
 # Состояния для FSM
@@ -81,9 +84,8 @@ async def generate_and_send(message: types.Message, state: FSMContext):
 
     # Генерация PDF
     input_path = "files/тест книги.pdf"
-output_path = f"files/generated_{random.randint(1000,9999)}.pdf"
-pdf_path = generate_personal_pdf(input_path, output_path, full_name, phone)
-
+    output_path = f"files/generated_{random.randint(1000,9999)}.pdf"
+    pdf_path = generate_personal_pdf(input_path, output_path, full_name, phone)
 
     if pdf_path and os.path.exists(pdf_path):
         await message.answer_document(types.FSInputFile(pdf_path))
