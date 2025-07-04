@@ -38,4 +38,5 @@ async def handle_russia(callback: types.CallbackQuery):
     )
 
 # Шаг 5.2 — Оплата для других стран
-@router.callback_query(lambda_
+@router.callback_query(lambda c: c.data == "some_value")
+
