@@ -75,7 +75,6 @@ async def ask_phone(message: types.Message, state: FSMContext):
     await state.set_state(Form.waiting_for_phone)
     await message.answer("📞 Введи номер телефона (будет виден только тебе):")
 
-
 # Шаг 8 — Получили телефон, генерируем PDF
 @router.message(Form.waiting_for_phone)
 async def generate_and_send(message: types.Message, state: FSMContext):
@@ -85,6 +84,9 @@ async def generate_and_send(message: types.Message, state: FSMContext):
         data = await state.get_data()
         full_name = data.get("full_name", "Имя неизвестно")
         phone = message.text
+
+        print(f"📩 Телефон получен: {phone}")
+        print(f"👤 Имя в state: {full_name}")
 
         await message.answer("📚 Генерируем твою именную книгу...")
 
@@ -97,6 +99,7 @@ async def generate_and_send(message: types.Message, state: FSMContext):
 
         # Проверка файла
         if pdf_path and os.path.exists(pdf_path):
+            print(f"✅ PDF создан: {pdf_path}")
             await message.answer_document(FSInputFile(pdf_path))
             await message.answer(
                 "✅ Готово!\n"
@@ -105,10 +108,11 @@ async def generate_and_send(message: types.Message, state: FSMContext):
                 "Присылай фото в новом теле и отмечай @rustam_faiz 😉"
             )
         else:
+            print("❌ PDF не найден")
             await message.answer("❌ Ошибка: файл не найден. Напиши @rustam_faiz.")
 
     except Exception as e:
-        await message.answer(f"❌ Произошла ошибка при генерации: {e}")
         print(f"❌ Ошибка generate_and_send: {e}")
+        await message.answer(f"❌ Произошла ошибка при генерации: {e}")
 
     await state.clear()
