@@ -70,9 +70,11 @@ async def ask_name(callback: types.CallbackQuery, state: FSMContext):
 # Шаг 7 — Получили имя, спрашиваем телефон
 @router.message(Form.waiting_for_name)
 async def ask_phone(message: types.Message, state: FSMContext):
+    print("📝 Получено ФИО:", message.text)  # лог в консоль
     await state.update_data(full_name=message.text)
     await state.set_state(Form.waiting_for_phone)
     await message.answer("📞 Введи номер телефона (будет виден только тебе):")
+
 
 # Шаг 8 — Получили телефон, генерируем PDF
 @router.message(Form.waiting_for_phone)
