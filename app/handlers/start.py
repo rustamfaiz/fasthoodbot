@@ -34,7 +34,7 @@ async def start_handler(message: types.Message):
     )
 
     await message.answer(part1)
-    await asyncio.sleep(3)
+    await asyncio.sleep(5)
     await message.answer(part2, reply_markup=builder.as_markup(), disable_web_page_preview=True)
 
 @router.callback_query(lambda c: c.data == "about_book")
@@ -67,10 +67,10 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
     ]
 
     for item in items:
-        await asyncio.sleep(2)
+        await asyncio.sleep(3)
         await bot.send_message(chat_id=callback.from_user.id, text=item)
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(3)
     await bot.send_photo(
         chat_id=callback.from_user.id,
         photo="https://i.imgur.com/jX4pQcI.jpeg",
