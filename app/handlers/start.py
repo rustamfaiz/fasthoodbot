@@ -44,7 +44,7 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
     builder.button(text="🔵 Вернуться", callback_data="back_to_start")
     builder.adjust(1)
 
-    base_intro = (
+    intro = (
         "📘 Это не просто книга со скучным рассказом что делать, кучей графиков и умным текстом.\n"
         "Это прямой удар по всем фитнес-мифам, на которых ты сливал годы.\n"
         "Без мотивационных соплей, без “всё получится”, без брокколи на пару.\n\n"
@@ -53,7 +53,7 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
         "Вот что ты получаешь:"
     )
 
-    await callback.message.answer(base_intro)
+    await callback.message.answer(intro)
 
     items = [
         "▪️ Пошаговый план жиросжигания, собранный по физиологии, а не по мнению тренеров",
@@ -67,10 +67,10 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
     ]
 
     for item in items:
-        await asyncio.sleep(3)
+        await asyncio.sleep(2)
         await bot.send_message(chat_id=callback.from_user.id, text=item)
 
-    await asyncio.sleep(3)
+    await asyncio.sleep(2)
     await bot.send_photo(
         chat_id=callback.from_user.id,
         photo="https://i.imgur.com/jX4pQcI.jpeg",
@@ -80,4 +80,3 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
 @router.callback_query(lambda c: c.data == "back_to_start")
 async def back_to_start(callback: types.CallbackQuery):
     await start_handler(callback.message)
-builder.button(text="🧪 Тест генерации", callback_data="test_send_pdf")
