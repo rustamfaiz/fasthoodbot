@@ -80,7 +80,10 @@ async def generate_and_send(message: types.Message, state: FSMContext):
     await message.answer("📚 Генерируем твою именную книгу...")
 
     # Генерация PDF
-    pdf_path = await generate_personal_pdf(full_name, phone)
+    input_path = "files/тест книги.pdf"
+output_path = f"files/generated_{random.randint(1000,9999)}.pdf"
+pdf_path = generate_personal_pdf(input_path, output_path, full_name, phone)
+
 
     if pdf_path and os.path.exists(pdf_path):
         await message.answer_document(types.FSInputFile(pdf_path))
