@@ -1,4 +1,4 @@
-from app.utils.pdf_generator import generate_personal_pdf
+from utils.pdf_generator import generate_personal_pdf
 
 if __name__ == "__main__":
     input_path = "files/тест книги.pdf"  # оригинальный файл
