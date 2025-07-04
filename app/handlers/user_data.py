@@ -4,6 +4,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from utils.pdf_generator import generate_personal_pdf
 
+import os
+
 router = Router()
 
 class PaymentFSM(StatesGroup):
@@ -40,8 +42,18 @@ async def get_phone_and_send_pdf(message: types.Message, state: FSMContext):
         phone_number=phone
     )
 
-    await message.answer_document(
-        types.FSInputFile(path=output_path),
-        caption="📘 Готово! Вот твоя именная книга."
-    )
+    # Проверка размера файла
+    if os.path.exists(output_path):
+        size_mb = os.path.getsize(output_path) / (1024 * 1024)
+        print(f"📦 Размер PDF: {size_mb:.2f} MB")
+
+        await message.answer(f"✅ PDF создан. Размер: {size_mb:.2f} MB. Отправляем...")
+
+        await message.answer_document(
+            types.FSInputFile(path=output_path),
+            caption="📘 Готово! Вот твоя именная книга."
+        )
+    else:
+        await message.answer("❌ Ошибка: PDF не создан.")
+
     await state.clear()
