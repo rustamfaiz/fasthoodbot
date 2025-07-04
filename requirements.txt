@@ -2,4 +2,5 @@ aiogram==3.2.0
 aiohttp
 python-dotenv
 asyncpg
+PyMuPDF==1.23.16
 
