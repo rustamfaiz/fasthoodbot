@@ -1,59 +1,47 @@
-from aiogram import Router, types
+from aiogram import Router, types, F
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from utils.pdf_generator import generate_personal_pdf
 
 router = Router()
 
-# Шаг 4 — Выбор региона
-@router.callback_query(lambda c: c.data == "get_book")
-async def ask_region(callback: types.CallbackQuery):
-    builder = InlineKeyboardBuilder()
-    builder.button(text="Россия", callback_data="region_ru")
-    builder.button(text="Другие страны", callback_data="region_other")
-    builder.button(text="⬅ Назад", callback_data="back_to_start")
-    builder.adjust(1)
+class PaymentFSM(StatesGroup):
+    waiting_for_full_name = State()
+    waiting_for_phone = State()
 
-    await callback.message.answer(
-        "📍 Укажи регион — для определения способа оплаты:",
-        reply_markup=builder.as_markup()
+# Шаг 6.1 — после нажатия "✅ Я оплатил"
+@router.callback_query(F.data.startswith("paid_"))
+async def handle_payment_confirmation(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.answer("📝 Введи своё <b>ФИО</b>, чтобы мы подписали книгу.")
+    await state.set_state(PaymentFSM.waiting_for_full_name)
+
+# Шаг 6.2 — получаем ФИО
+@router.message(PaymentFSM.waiting_for_full_name)
+async def get_full_name(message: types.Message, state: FSMContext):
+    await state.update_data(full_name=message.text.strip())
+    await message.answer("📱 Теперь введи номер телефона (в международном формате).")
+    await state.set_state(PaymentFSM.waiting_for_phone)
+
+# Шаг 6.3 — получаем телефон, генерируем PDF и отправляем
+@router.message(PaymentFSM.waiting_for_phone)
+async def get_phone_and_send_pdf(message: types.Message, state: FSMContext):
+    user_data = await state.get_data()
+    full_name = user_data.get("full_name")
+    phone = message.text.strip()
+
+    input_path = "files/тест книги.pdf"
+    output_path = f"files/book_{message.from_user.id}.pdf"
+
+    generate_personal_pdf(
+        input_path=input_path,
+        output_path=output_path,
+        full_name=full_name,
+        phone_number=phone
     )
 
-# Шаг 5.1 — Оплата для России
-@router.callback_query(lambda c: c.data == "region_ru")
-async def handle_russia(callback: types.CallbackQuery):
-    builder = InlineKeyboardBuilder()
-    builder.button(text="✅ Я оплатил", callback_data="paid_russia")
-    builder.adjust(1)
-
-    await callback.message.answer(
-        "💳 <b>Оплата</b>\n"
-        "Чтобы получить книгу, перейди по ссылке и оплати заказ:\n"
-        "🔗 <a href='https://example.com/pay_russia'>ОПЛАТИТЬ</a>\n\n"
-        "После оплаты нажми «Я оплатил» — и мы пришлём тебе именной файл.",
-        reply_markup=builder.as_markup(),
-        disable_web_page_preview=True
+    await message.answer_document(
+        types.FSInputFile(path=output_path),
+        caption="📘 Готово! Вот твоя именная книга."
     )
-
-# Шаг 5.2 — Оплата для других стран
-@router.callback_query(lambda c: c.data == "region_other")
-async def handle_other_countries(callback: types.CallbackQuery):
-    builder = InlineKeyboardBuilder()
-    builder.button(text="✅ I Paid", callback_data="paid_other")
-    builder.adjust(1)
-
-    await callback.message.answer(
-        "💳 <b>Payment</b>\n"
-        "To get the book, please pay via the link below:\n"
-        "🔗 <a href='https://example.com/pay_world'>PAY NOW</a>\n\n"
-        "Once paid, click 'I Paid' and we’ll send you your personal file.",
-        reply_markup=builder.as_markup(),
-        disable_web_page_preview=True
-    )
-
-# Шаг 6 — Подтверждение оплаты (временно без PDF)
-@router.callback_query(lambda c: c.data.startswith("paid_"))
-async def handle_payment_confirmation(callback: types.CallbackQuery):
-    await callback.message.answer(
-        "🔧 Спасибо! Оплата подтверждена (в тестовом режиме).\n"
-        "Скоро пришлём твою именную книгу."
-    )
-
+    await state.clear()
