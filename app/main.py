@@ -4,7 +4,7 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import BOT_TOKEN
-from handlers import start, region, promocode
+from handlers import start, region, user_data
 
 async def main():
     bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
@@ -12,7 +12,7 @@ async def main():
 
     dp.include_router(start.router)
     dp.include_router(region.router)
-    dp.include_router(promocode.router)
+    dp.include_router(user_data.router)
 
     print("🤖 Бот запущен.")
     await dp.start_polling(bot)
