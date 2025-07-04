@@ -1,51 +1,42 @@
 import fitz  # PyMuPDF
 import random
-import os
 
-def generate_marked_pdf(input_path: str, output_path: str, full_name: str, phone: str):
+def generate_personal_pdf(input_path: str, output_path: str, full_name: str, phone_number: str):
     doc = fitz.open(input_path)
 
-    # Настройки шрифта и координат
-    font_size = 10
-    margin = 30
-
     for i, page in enumerate(doc):
-        # Пропускаем первую страницу (обложку)
+        # Пропускаем обложку (первая страница)
         if i == 0:
             continue
 
-        # Верхний правый угол — фамилия
+        # Добавляем фамилию — вправо вверх
         page.insert_text(
-            (page.rect.width - margin * 5, margin),
+            (page.rect.width - 120, 20),
             full_name,
-            fontsize=font_size,
-            color=(0.5, 0.5, 0.5),
-            overlay=True
+            fontsize=8,
+            color=(0, 0, 0),
         )
 
-        # Нижний левый угол — номер телефона
+        # Добавляем телефон — влево вниз
         page.insert_text(
-            (margin, page.rect.height - margin),
-            phone,
-            fontsize=font_size,
-            color=(0.5, 0.5, 0.5),
-            overlay=True
+            (20, page.rect.height - 20),
+            phone_number,
+            fontsize=8,
+            color=(0, 0, 0),
         )
 
-        # Каждая 5–10 страница — водяной знак на весь лист
-        if (i % random.randint(5, 10)) == 0:
-            text = f"Тел: {phone}"
-            rect = page.rect
+        # Водяной знак — на каждые 5–10 страниц
+        if i % random.randint(5, 10) == 0:
             page.insert_textbox(
-                rect,
-                text,
-                fontsize=60,
-                color=(0.9, 0.9, 0.9),
+                rect=page.rect,
+                buffer=0,
+                text=phone_number,
+                fontsize=40,
+                color=(0.9, 0.9, 0.9),  # светло-серый
                 rotate=45,
-                align=1,  # центр
-                overlay=True
+                align=1,
+                overlay=True,
             )
 
-    # Сохраняем файл
     doc.save(output_path)
     doc.close()
