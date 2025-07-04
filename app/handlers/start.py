@@ -80,3 +80,4 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
 @router.callback_query(lambda c: c.data == "back_to_start")
 async def back_to_start(callback: types.CallbackQuery):
     await start_handler(callback.message)
+builder.button(text="🧪 Тест генерации", callback_data="test_send_pdf")
