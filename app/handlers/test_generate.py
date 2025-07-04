@@ -1,3 +1,6 @@
+from aiogram import Router
+router = Router()
+
 from utils.pdf_generator import generate_personal_pdf
 
 if __name__ == "__main__":
