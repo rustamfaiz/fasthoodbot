@@ -2,7 +2,7 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from app.utils.pdf_generator import generate_personal_pdf
+from utils.pdf_generator import generate_personal_pdf
 
 router = Router()
 
