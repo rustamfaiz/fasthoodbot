@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
 from aiogram.types import CallbackQuery, FSInputFile
-from utils.pdf_generator import generate_marked_pdf
+from utils.pdf_generator import generate_personal_pdf
 
 router = Router()
 
@@ -11,7 +11,7 @@ async def handle_get_book(callback: CallbackQuery):
     phone = callback.message.chat.id  # или используй реальный, если сохранили
 
     # Генерация PDF
-    output_path = generate_marked_pdf(full_name=full_name, phone=str(phone))
+    output_path = generate_personal_pdf(full_name=full_name, phone=str(phone))
 
     # Отправка пользователю
     await callback.message.answer_document(
