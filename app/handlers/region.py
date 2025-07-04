@@ -21,11 +21,13 @@ async def ask_region(callback: types.CallbackQuery):
         reply_markup=builder.as_markup()
     )
 
+
 # Шаг 5.1 — Оплата для России
 @router.callback_query(lambda c: c.data == "region_ru")
 async def handle_russia(callback: types.CallbackQuery):
     builder = InlineKeyboardBuilder()
     builder.button(text="✅ Я оплатил", callback_data="paid_russia")
+    builder.button(text="⬅ Назад", callback_data="get_book")
     builder.adjust(1)
 
     await callback.message.answer(
@@ -37,6 +39,36 @@ async def handle_russia(callback: types.CallbackQuery):
         disable_web_page_preview=True
     )
 
-# Шаг 5.2 — Оплата для других стран
-@router.callback_query(lambda c: c.data == "some_value")
 
+# Шаг 5.2 — Заглушка для других стран
+@router.callback_query(lambda c: c.data == "region_other")
+async def handle_other_country(callback: types.CallbackQuery):
+    builder = InlineKeyboardBuilder()
+    builder.button(text="⬅ Назад", callback_data="get_book")
+    builder.adjust(1)
+
+    await callback.message.answer(
+        "🌍 Направление в разработке. Скоро запустимся.",
+        reply_markup=builder.as_markup()
+    )
+
+
+# Шаг 6 — Генерация PDF после оплаты
+@router.callback_query(lambda c: c.data == "paid_russia")
+async def handle_paid_russia(callback: types.CallbackQuery):
+    user = callback.from_user
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip()
+    phone_number = user.id  # Или получи номер отдельно, если собираешь
+
+    output_path = generate_personal_pdf(
+        base_pdf_path="files/тест книги.pdf",
+        output_folder="files",
+        full_name=full_name,
+        phone_number=str(phone_number)
+    )
+
+    doc = FSInputFile(path=output_path)
+    await callback.message.answer_document(
+        document=doc,
+        caption="📘 Вот твоя именная книга.\nПриятного чтения!"
+    )
