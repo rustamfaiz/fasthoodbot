@@ -8,10 +8,14 @@ router = Router()
 async def handle_get_book(callback: CallbackQuery):
     user = callback.from_user
     full_name = user.full_name
-    phone = callback.message.chat.id  # или используй реальный, если сохранили
+    phone = str(callback.message.chat.id)  # или реальный, если есть
+
+    # Пути к файлам
+    input_path = "files/тест книги.pdf"
+    output_path = f"files/book_{user.id}.pdf"
 
     # Генерация PDF
-    output_path = generate_personal_pdf(full_name=full_name, phone=str(phone))
+    generate_personal_pdf(input_path, output_path, full_name, phone)
 
     # Отправка пользователю
     await callback.message.answer_document(
