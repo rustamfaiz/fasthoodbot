@@ -1,3 +1,4 @@
+import asyncio
 from aiogram import Router, types, Bot
 from aiogram.filters import CommandStart
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -56,6 +57,7 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
     )
 
     await callback.message.edit_text(text, disable_web_page_preview=True)
+    await asyncio.sleep(5)
     await bot.send_photo(
         chat_id=callback.from_user.id,
         photo="https://i.imgur.com/jX4pQcI.jpeg",
