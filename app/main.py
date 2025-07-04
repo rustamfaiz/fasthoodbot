@@ -6,7 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
 
 # Импорты роутеров
-from handlers import start, region, user_data, test_generate, book, payment  # <–– добавили payment
+from handlers import start, region, user_data, test_generate, payment  # <- убран 'book'
 
 async def main():
     bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
@@ -17,8 +17,7 @@ async def main():
     dp.include_router(region.router)
     dp.include_router(user_data.router)
     dp.include_router(test_generate.router)
-    dp.include_router(book.router)
-    dp.include_router(payment.router)  # <–– подключаем payment
+    dp.include_router(payment.router)  # <- подключен payment
 
     print("🤖 Бот запущен!")
     await dp.start_polling(bot)
