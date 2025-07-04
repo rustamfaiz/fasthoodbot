@@ -1,6 +1,6 @@
 from aiogram import Router, types, F
 from aiogram.types import CallbackQuery, FSInputFile
-from app.utils.pdf_generator import generate_marked_pdf
+from utils.pdf_generator import generate_marked_pdf
 
 router = Router()
 
