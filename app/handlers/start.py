@@ -80,7 +80,3 @@ async def about_book(callback: types.CallbackQuery, bot: Bot):
 @router.callback_query(lambda c: c.data == "back_to_start")
 async def back_to_start(callback: types.CallbackQuery):
     await start_handler(callback.message)
-
-@router.callback_query(lambda c: c.data == "get_book")
-async def get_book(callback: types.CallbackQuery):
-    await callback.message.answer("⏳ Раздел в разработке. Скоро продолжим.")
