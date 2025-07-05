@@ -9,6 +9,9 @@ ADMIN_ID = 335067126  # Telegram ID админа
 
 router = Router()
 
+# Временное хранилище данных пользователя
+user_data_dict = {}
+
 class Form(StatesGroup):
     waiting_for_payment_screenshot = State()
     waiting_for_name = State()
@@ -66,6 +69,12 @@ async def send_to_admin(message: Message, state: FSMContext):
     username = message.from_user.username or "—"
     user_id = message.from_user.id
 
+    # Сохраняем данные во временный словарь
+    user_data_dict[user_id] = {
+        "name": name,
+        "phone": phone
+    }
+
     # Кнопка для админа
     builder = InlineKeyboardBuilder()
     builder.button(text="📘 Подтвердить и отправить книгу", callback_data=f"confirm_payment:{user_id}")
@@ -104,9 +113,11 @@ async def confirm_payment(callback: types.CallbackQuery, state: FSMContext):
         return
 
     user_id = int(callback.data.split(":")[1])
-    # Здесь можно извлекать имя и телефон, если ты хочешь пересылать их из FSM (нужно хранилище)
-    # Пока используем заглушку:
-    pdf_path = generate_personal_pdf(name="Покупатель", phone="Не указан")
+    user_data = user_data_dict.get(user_id, {})
+    name = user_data.get("name", "Покупатель")
+    phone = user_data.get("phone", "Не указан")
+
+    pdf_path = generate_personal_pdf(name=name, phone=phone)
     pdf = FSInputFile(pdf_path)
 
     await callback.message.bot.send_document(
