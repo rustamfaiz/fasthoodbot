@@ -11,20 +11,6 @@ class Form(StatesGroup):
     waiting_for_name = State()
     waiting_for_phone = State()
 
-# Шаг 4 — Выбор региона
-@router.callback_query(F.data == "get_book")
-async def ask_region(callback: types.CallbackQuery):
-    builder = InlineKeyboardBuilder()
-    builder.button(text="Россия", callback_data="region_ru")
-    builder.button(text="Другие страны", callback_data="region_other")
-    builder.button(text="⬅ Назад", callback_data="back_to_start")
-    builder.adjust(1)
-
-    await callback.message.answer(
-        "📍 Укажи регион — для определения способа оплаты:",
-        reply_markup=builder.as_markup()
-    )
-
 # Шаг 5 — Россия / ввод промокода
 @router.callback_query(F.data == "region_ru")
 async def ask_promocode(callback: types.CallbackQuery, state: FSMContext):
