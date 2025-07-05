@@ -36,7 +36,7 @@ async def ask_promocode(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Form.waiting_for_promocode)
     await callback.message.answer("💡 Введи промокод, если он есть. Или напиши «-», чтобы продолжить без него:")
 
-# Шаг 5 — Обработка промокода
+# Шаг 6 — Обработка промокода и показ способов оплаты
 @router.message(Form.waiting_for_promocode)
 async def handle_promo_and_ask_payment(message: types.Message, state: FSMContext):
     code = message.text.strip()
@@ -94,7 +94,7 @@ async def back_to_promo(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Form.waiting_for_promocode)
     await callback.message.answer("🔁 Введи промокод ещё раз или напиши «-», если его нет:")
 
-# Заглушка для СБП (временно): обработка pay_qr — сюда пойдём в следующем шаге
+# Заглушка для СБП — сюда пойдёт обработка оплаты
 @router.callback_query(F.data == "pay_qr")
 async def handle_qr_payment(callback: types.CallbackQuery):
     await callback.message.answer("🧾 Переход к оплате через СБП... (в разработке)")
