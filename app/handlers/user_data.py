@@ -1,59 +1,81 @@
+# handlers/user_data.py
+
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import FSInputFile, Message
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from utils.pdf_generator import generate_personal_pdf
 
-import os
+ADMIN_ID = 335067126  # Telegram ID админа
 
 router = Router()
 
-class PaymentFSM(StatesGroup):
-    waiting_for_full_name = State()
+class Form(StatesGroup):
+    waiting_for_name = State()
     waiting_for_phone = State()
+    waiting_for_payment_screenshot = State()
 
-# Шаг 6.1 — после нажатия "✅ Я оплатил"
-@router.callback_query(F.data.startswith("paid_"))
-async def handle_payment_confirmation(callback: types.CallbackQuery, state: FSMContext):
-    await callback.message.answer("📝 Введи своё <b>ФИО</b>, чтобы мы подписали книгу.")
-    await state.set_state(PaymentFSM.waiting_for_full_name)
+# Шаг 1 — Показываем QR-код и ссылку
+@router.callback_query(F.data == "pay_qr")
+async def show_qr(callback: types.CallbackQuery, state: FSMContext):
+    photo = FSInputFile("files/qr.png")  # Помести свой QR в эту папку с именем qr.png
+    await callback.message.answer_photo(photo)
 
-# Шаг 6.2 — получаем ФИО
-@router.message(PaymentFSM.waiting_for_full_name)
-async def get_full_name(message: types.Message, state: FSMContext):
-    await state.update_data(full_name=message.text.strip())
-    await message.answer("📱 Теперь введи номер телефона (в международном формате).")
-    await state.set_state(PaymentFSM.waiting_for_phone)
+    data = await state.get_data()
+    price = data.get("price", "2900")
 
-# Шаг 6.3 — получаем телефон, генерируем PDF и отправляем
-@router.message(PaymentFSM.waiting_for_phone)
-async def get_phone_and_send_pdf(message: types.Message, state: FSMContext):
-    user_data = await state.get_data()
-    full_name = user_data.get("full_name")
-    phone = message.text.strip()
-
-    input_path = "files/тест книги.pdf"
-    output_path = f"files/book_{message.from_user.id}.pdf"
-
-    generate_personal_pdf(
-        input_path=input_path,
-        output_path=output_path,
-        full_name=full_name,
-        phone_number=phone
+    await callback.message.answer(
+        f"📲 Готово к оплате.\n\n"
+        f"Чтобы оплатить книгу, просто:\n"
+        f"— Отсканируй QR-код выше камерой телефона\n"
+        f"или\n"
+        f"— Перейди по ссылке и оплати картой или через СБП\n\n"
+        f"💳 Стоимость: {price} рублей\n\n"
+        f"После оплаты нажми кнопку «✅ Я оплатил»"
     )
 
-    # Проверка размера файла
-    if os.path.exists(output_path):
-        size_mb = os.path.getsize(output_path) / (1024 * 1024)
-        print(f"📦 Размер PDF: {size_mb:.2f} MB")
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ Я оплатил", callback_data="confirm_payment_started")
+    builder.adjust(1)
+    await callback.message.answer("Когда оплатишь — нажми кнопку:", reply_markup=builder.as_markup())
 
-        await message.answer(f"✅ PDF создан. Размер: {size_mb:.2f} MB. Отправляем...")
+# Шаг 2 — Нажал «Я оплатил» → просим скрин
+@router.callback_query(F.data == "confirm_payment_started")
+async def ask_payment_proof(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.answer(
+        "🧾 Пришли, пожалуйста, скриншот чека об оплате — или фото из приложения.\n\n"
+        "Так мы быстрее подтвердим платёж и подготовим твою книгу."
+    )
+    await state.set_state(Form.waiting_for_payment_screenshot)
 
-        await message.answer_document(
-            types.FSInputFile(path=output_path),
-            caption="📘 Готово! Вот твоя именная книга."
-        )
-    else:
-        await message.answer("❌ Ошибка: PDF не создан.")
+# Шаг 3 — Приём скрина оплаты
+@router.message(Form.waiting_for_payment_screenshot, F.photo)
+async def handle_payment_screenshot(message: Message, state: FSMContext):
+    data = await state.get_data()
+    name = data.get("name", "Не указано")
+    phone = data.get("phone", "Не указан")
+    price = data.get("price", "2900")
+
+    # Отправляем админу чек и данные
+    caption = (
+        f"🆕 Новый платёж через СБП\n\n"
+        f"👤 ФИО: {name}\n"
+        f"📞 Телефон: {phone}\n"
+        f"💳 Сумма: {price} ₽\n"
+        f"🖼 Чек во вложении"
+    )
+    await message.bot.send_photo(chat_id=ADMIN_ID, photo=message.photo[-1].file_id, caption=caption)
+
+    await message.answer(
+        "✅ Спасибо! Оплата получена.\n\n"
+        "📘 В течение 24 часов тебе будет сгенерирована именная версия книги. "
+        "Она придёт прямо сюда, в этот чат.\n\n"
+        "Ожидай. Всё идёт по плану."
+    )
 
     await state.clear()
+
+# Дополнительно: если пользователь прислал не фото
+@router.message(Form.waiting_for_payment_screenshot)
+async def invalid_payment_format(message: types.Message):
+    await message.answer("❗ Пожалуйста, пришли изображение — фото или скриншот чека.")
