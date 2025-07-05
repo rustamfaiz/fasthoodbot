@@ -1,56 +1,56 @@
 from pathlib import Path
-import random
 import fitz  # PyMuPDF
-
-# Путь к шаблону PDF-книги
-TEMPLATE_PATH = Path("files/book.pdf")
-OUTPUT_DIR = Path("files/output")
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+import random
+import time
 
 def generate_personal_pdf(name: str, phone: str) -> str:
-    # Загружаем шаблон книги
-    doc = fitz.open(TEMPLATE_PATH)
+    # Оригинал книги
+    source_file = Path("files/book.pdf")
 
-    # Настройки текста
-    font_size = 10
-    font_name = "helv"
+    # Уникальное имя файла
+    timestamp = int(time.time())
+    output_file = Path(f"files/generated_{phone}_{timestamp}.pdf")
 
-    # Вставка ФИО в правый верхний угол каждой страницы (кроме обложки)
+    # Открываем PDF
+    doc = fitz.open(source_file)
+
+    # Добавляем ФИО и телефон на каждую страницу (кроме обложки)
     for i, page in enumerate(doc):
         if i == 0:
-            continue  # Пропускаем обложку
-        text = name
-        x = page.rect.width - 100
-        y = 20
-        page.insert_text((x, y), text, fontsize=font_size, fontname=font_name, color=(0, 0, 0), morph=None)
+            continue  # пропускаем обложку
 
-        # Вставка телефона в левый нижний угол
-        phone_x = 20
-        phone_y = page.rect.height - 20
-        page.insert_text((phone_x, phone_y), phone, fontsize=font_size, fontname=font_name, color=(0, 0, 0), morph=None)
+        # Вставка фамилии (в правый верхний угол)
+        try:
+            page.insert_text((400, 30), name, fontsize=8)
+        except Exception as e:
+            print(f"Ошибка вставки имени на стр. {i + 1}: {e}")
 
-    # Водяной знак на каждой 5–10-й странице
+        # Вставка телефона (в левый нижний угол)
+        try:
+            page.insert_text((30, 800), phone, fontsize=8)
+        except Exception as e:
+            print(f"Ошибка вставки телефона на стр. {i + 1}: {e}")
+
+    # Вставка водяного знака на каждую 5–10 страницу
     for i, page in enumerate(doc):
-        if i < 1:
+        if i == 0:
             continue
         if i % random.randint(5, 10) == 0:
-            text = f"@{phone}"
-            rect = page.rect
-            x = rect.width / 4
-            y = rect.height / 2
-            page.insert_text(
-                (x, y),
-                text,
-                fontsize=40,
-                fontname=font_name,
-                color=(0.85, 0.85, 0.85),  # светло-серый
-                rotate=30,
-                morph=None
-            )
+            try:
+                page.insert_text(
+                    (150, 400),
+                    f"📱 {phone}",
+                    fontsize=20,
+                    rotate=30,
+                    color=(0.8, 0.8, 0.8),
+                    render_mode=3,
+                    morph=None,
+                    overlay=True,
+                )
+            except Exception as e:
+                print(f"Ошибка вставки водяного знака на стр. {i + 1}: {e}")
 
-    # Генерация имени файла
-    output_path = OUTPUT_DIR / f"{phone.replace('+', '')}_{name.replace(' ', '_')}.pdf"
-    doc.save(output_path)
+    doc.save(output_file)
     doc.close()
 
-    return str(output_path)
+    return str(output_file)
