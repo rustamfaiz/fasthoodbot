@@ -3,4 +3,4 @@ aiohttp
 python-dotenv
 asyncpg
 PyMuPDF==1.23.16
-
+Unidecode
