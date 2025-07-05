@@ -1,55 +1,56 @@
+from pathlib import Path
+import random
 import fitz  # PyMuPDF
-import os
 
+# Путь к шаблону PDF-книги
+TEMPLATE_PATH = Path("files/book.pdf")
+OUTPUT_DIR = Path("files/output")
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def generate_personal_pdf(name: str, phone: str) -> str:
-    template_path = "files/book.pdf"
-    output_path = f"files/generated_{phone}.pdf"
+    # Загружаем шаблон книги
+    doc = fitz.open(TEMPLATE_PATH)
 
-    doc = fitz.open(template_path)
+    # Настройки текста
+    font_size = 10
+    font_name = "helv"
 
-    for page_number in range(len(doc)):
-        page = doc[page_number]
-        width, height = page.rect.width, page.rect.height
+    # Вставка ФИО в правый верхний угол каждой страницы (кроме обложки)
+    for i, page in enumerate(doc):
+        if i == 0:
+            continue  # Пропускаем обложку
+        text = name
+        x = page.rect.width - 100
+        y = 20
+        page.insert_text((x, y), text, fontsize=font_size, fontname=font_name, color=(0, 0, 0), morph=None)
 
-        # Вставка имени в правом верхнем углу (кроме первой страницы)
-        if page_number != 0:
+        # Вставка телефона в левый нижний угол
+        phone_x = 20
+        phone_y = page.rect.height - 20
+        page.insert_text((phone_x, phone_y), phone, fontsize=font_size, fontname=font_name, color=(0, 0, 0), morph=None)
+
+    # Водяной знак на каждой 5–10-й странице
+    for i, page in enumerate(doc):
+        if i < 1:
+            continue
+        if i % random.randint(5, 10) == 0:
+            text = f"@{phone}"
+            rect = page.rect
+            x = rect.width / 4
+            y = rect.height / 2
             page.insert_text(
-                fitz.Point(width - 150, 40),
-                name,
-                fontsize=10,
-                fontname="helv",
-                color=(0, 0, 0),
+                (x, y),
+                text,
+                fontsize=40,
+                fontname=font_name,
+                color=(0.85, 0.85, 0.85),  # светло-серый
+                rotate=30,
+                morph=None
             )
 
-        # Вставка номера телефона в левый нижний угол (на всех страницах)
-        page.insert_text(
-            fitz.Point(40, height - 40),
-            phone,
-            fontsize=10,
-            fontname="helv",
-            color=(0, 0, 0),
-        )
-
-        # Вставка водяного знака на каждой 5–10 странице
-        if page_number % 5 == 0:
-            center = fitz.Point(width / 2, height / 2)
-            matrix = fitz.Matrix(1, 1).prerotate(45)
-            morph = [matrix, matrix]  # двойной — от и до
-
-            page.insert_text(
-                center,
-                phone,
-                fontsize=30,
-                fontname="helv",
-                color=(0.8, 0.8, 0.8),
-                rotate=0,
-                render_mode=0,
-                morph=morph,
-                fill_opacity=0.1
-            )
-
+    # Генерация имени файла
+    output_path = OUTPUT_DIR / f"{phone.replace('+', '')}_{name.replace(' ', '_')}.pdf"
     doc.save(output_path)
     doc.close()
 
-    return output_path
+    return str(output_path)
