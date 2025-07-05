@@ -1,54 +1,60 @@
 import fitz  # PyMuPDF
-import random
+import os
+from datetime import datetime
+from pathlib import Path
 
-def generate_personal_pdf(input_path: str, output_path: str, full_name: str, phone_number: str):
-    print("📄 Запущен генератор PDF")  # лог
-    print(f"📥 Входной файл: {input_path}")
-    print(f"📤 Выходной файл: {output_path}")
-    print(f"👤 Имя: {full_name}")
-    print(f"📞 Телефон: {phone_number}")
+def generate_personal_pdf(name: str, phone: str) -> str:
+    template_path = "files/book.pdf"
+    output_dir = "files/generated"
+    os.makedirs(output_dir, exist_ok=True)
 
-    try:
-        doc = fitz.open(input_path)
+    # Уникальное имя файла
+    safe_name = name.replace(" ", "_")
+    filename = f"{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    output_path = os.path.join(output_dir, filename)
 
-        for i, page in enumerate(doc):
-            # Пропускаем обложку
-            if i == 0:
-                continue
+    # Открываем шаблон
+    doc = fitz.open(template_path)
 
-            # ФИО — правый верхний угол
+    for page_number, page in enumerate(doc, start=1):
+        width, height = page.rect.width, page.rect.height
+
+        # Пропускаем первую страницу (обложку)
+        if page_number != 1:
+            # ФИО — в правом верхнем углу
             page.insert_text(
-                (page.rect.width - 120, 20),
-                full_name,
+                (width - 150, 40),
+                name,
                 fontsize=8,
                 color=(0, 0, 0),
+                fontname="helv",
             )
 
-            # Телефон — левый нижний угол
+            # Телефон — в левом нижнем углу
             page.insert_text(
-                (20, page.rect.height - 20),
-                phone_number,
+                (40, height - 30),
+                phone,
                 fontsize=8,
                 color=(0, 0, 0),
+                fontname="helv",
             )
 
-            # Водяной знак — раз в 5–10 страниц
-            if i % random.randint(5, 10) == 0:
-                page.insert_textbox(
-                    page.rect,
-                    phone_number,
-                    fontsize=40,
-                    color=(0.9, 0.9, 0.9),
-                    rotate=90,  # 🔧 исправлено
-                    align=1,
-                    overlay=True
-                )
+        # Водяной знак на каждой 5-й странице
+        if page_number % 5 == 0:
+            page.insert_textbox(
+                page.rect,
+                phone,
+                fontsize=30,
+                rotate=45,
+                fontname="helv",
+                color=(0.8, 0.8, 0.8),
+                align=1,
+                overlay=True,
+                fill_opacity=0.1,
+            )
 
-        doc.save(output_path)
-        doc.close()
-        print("✅ PDF успешно сохранён")
-        return output_path
+    # Сохраняем
+    doc.save(output_path)
+    doc.close()
 
-    except Exception as e:
-        print(f"❌ Ошибка в генерации PDF: {e}")
-        return None
+    return output_path
