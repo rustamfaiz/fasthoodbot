@@ -1,5 +1,3 @@
-# handlers/user_data.py
-
 from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -18,7 +16,7 @@ class Form(StatesGroup):
 # Шаг 1 — Показываем QR-код и ссылку
 @router.callback_query(F.data == "pay_qr")
 async def show_qr(callback: types.CallbackQuery, state: FSMContext):
-    photo = FSInputFile("files/qr.png")  # Помести свой QR в эту папку с именем qr.png
+    photo = FSInputFile("files/qr.png")  # Помести файл qr.png в папку files
     await callback.message.answer_photo(photo)
 
     data = await state.get_data()
@@ -29,7 +27,7 @@ async def show_qr(callback: types.CallbackQuery, state: FSMContext):
         f"Чтобы оплатить книгу, просто:\n"
         f"— Отсканируй QR-код выше камерой телефона\n"
         f"или\n"
-        f"— Перейди по ссылке и оплати картой или через СБП\n\n"
+        f"— <a href='https://www.tinkoff.ru/rm/r_rPnohUIkbB.eRVktSOsDc/3Ioud12615'>Перейди по ссылке и оплати</a> картой или через СБП\n\n"
         f"💳 Стоимость: {price} рублей\n\n"
         f"После оплаты нажми кнопку «✅ Я оплатил»"
     )
