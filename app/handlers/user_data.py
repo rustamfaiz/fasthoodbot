@@ -69,41 +69,50 @@ async def send_to_admin(message: Message, state: FSMContext):
     username = message.from_user.username or "—"
     user_id = message.from_user.id
 
+    if not screenshot_file_id:
+        await message.answer("⚠️ Не удалось получить изображение оплаты. Попробуй сначала.")
+        return
+
+    # Показываем лог
+    await message.answer("📤 Готовим файл и отправляем админу...")
+
     # Сохраняем данные во временный словарь
     user_data_dict[user_id] = {
         "name": name,
         "phone": phone
     }
 
-    # Кнопка для админа
-    builder = InlineKeyboardBuilder()
-    builder.button(text="📘 Подтвердить и отправить книгу", callback_data=f"confirm_payment:{user_id}")
-    builder.adjust(1)
+    try:
+        builder = InlineKeyboardBuilder()
+        builder.button(text="📘 Подтвердить и отправить книгу", callback_data=f"confirm_payment:{user_id}")
+        builder.adjust(1)
 
-    # Сообщение админу
-    caption = (
-        f"🆕 Новый платёж\n\n"
-        f"👤 ФИО: {name}\n"
-        f"📞 Телефон: {phone}\n"
-        f"🔗 Telegram: @{username}\n"
-        f"🖼 Чек во вложении"
-    )
+        caption = (
+            f"🆕 Новый платёж\n\n"
+            f"👤 ФИО: {name}\n"
+            f"📞 Телефон: {phone}\n"
+            f"🔗 Telegram: @{username}\n"
+            f"🖼 Чек во вложении"
+        )
 
-    await message.bot.send_photo(
-        chat_id=ADMIN_ID,
-        photo=screenshot_file_id,
-        caption=caption,
-        reply_markup=builder.as_markup()
-    )
+        await message.bot.send_photo(
+            chat_id=ADMIN_ID,
+            photo=screenshot_file_id,
+            caption=caption,
+            reply_markup=builder.as_markup()
+        )
 
-    await message.answer(
-        "✅ Спасибо! Все данные получены.\n\n"
-        "📘 В течение 24 часов тебе будет сгенерирована именная версия книги. "
-        "Она придёт прямо сюда, в этот чат.\n\n"
-        "Ожидай. Всё идёт по плану."
-    )
+        await message.answer(
+            "✅ Спасибо! Все данные получены.\n\n"
+            "📘 В течение 24 часов тебе будет сгенерирована именная версия книги. "
+            "Она придёт прямо сюда, в этот чат.\n\n"
+            "Ожидай. Всё идёт по плану."
+        )
 
-    await state.clear()
+        await state.clear()
+
+    except Exception as e:
+        await message.answer(f"❌ Ошибка при отправке админу: {e}")
 
 # 🟢 Шаг 5 — админ подтверждает → бот отправляет книгу
 @router.callback_query(F.data.startswith("confirm_payment:"))
@@ -126,7 +135,8 @@ async def confirm_payment(callback: types.CallbackQuery, state: FSMContext):
         caption="📘 Вот твоя книга. Удачи!"
     )
     await callback.answer("✅ Книга отправлена.")
-    # 🔁 Обработчик кнопки оплаты через СБП (QR)
+
+# 🔁 Обработчик кнопки оплаты через СБП (QR)
 @router.callback_query(F.data == "pay_qr")
 async def show_qr(callback: types.CallbackQuery, state: FSMContext):
     photo = FSInputFile("files/qr.png")
@@ -150,4 +160,3 @@ async def show_qr(callback: types.CallbackQuery, state: FSMContext):
     builder.button(text="✅ Я оплатил", callback_data="confirm_payment_started")
     builder.adjust(1)
     await callback.message.answer("Когда оплатишь — нажми кнопку:", reply_markup=builder.as_markup())
-
