@@ -2,11 +2,6 @@ from aiogram import Router, types, F
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import FSInputFile
-from utils.pdf_generator import generate_personal_pdf
-
-import random
-import os
 
 router = Router()
 
@@ -93,8 +88,3 @@ async def temp_yookassa_notice(callback: types.CallbackQuery):
 async def back_to_promo(callback: types.CallbackQuery, state: FSMContext):
     await state.set_state(Form.waiting_for_promocode)
     await callback.message.answer("🔁 Введи промокод ещё раз или напиши «-», если его нет:")
-
-# Заглушка для СБП — сюда пойдёт обработка оплаты
-@router.callback_query(F.data == "pay_qr")
-async def handle_qr_payment(callback: types.CallbackQuery):
-    await callback.message.answer("🧾 Переход к оплате через СБП... (в разработке)")
