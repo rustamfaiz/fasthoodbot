@@ -6,17 +6,17 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from config import BOT_TOKEN
 
 # Импорт маршрутов
-from handlers import start, region, promocode, user_data, test_generate, payment
+from handlers import start, region, user_data, promocode, test_generate, payment
 
 async def main():
     bot = Bot(token=BOT_TOKEN, parse_mode=ParseMode.HTML)
     dp = Dispatcher(storage=MemoryStorage())
 
-    # Подключаем все роутеры
+    # Подключаем роутеры в корректном порядке
     dp.include_router(start.router)
     dp.include_router(region.router)
-    dp.include_router(promocode.router)  # ✅ обновлённый файл промокодов
-    dp.include_router(user_data.router)
+    dp.include_router(user_data.router)       # 🔥 должен идти раньше всех, кто может перехватить pay_qr
+    dp.include_router(promocode.router)
     dp.include_router(test_generate.router)
     dp.include_router(payment.router)
 
