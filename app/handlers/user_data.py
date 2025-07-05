@@ -126,3 +126,28 @@ async def confirm_payment(callback: types.CallbackQuery, state: FSMContext):
         caption="📘 Вот твоя книга. Удачи!"
     )
     await callback.answer("✅ Книга отправлена.")
+    # 🔁 Обработчик кнопки оплаты через СБП (QR)
+@router.callback_query(F.data == "pay_qr")
+async def show_qr(callback: types.CallbackQuery, state: FSMContext):
+    photo = FSInputFile("files/qr.png")
+    data = await state.get_data()
+    price = data.get("price", "2900")
+
+    await callback.message.answer_photo(photo)
+
+    await callback.message.answer(
+        f"📲 Готово к оплате.\n\n"
+        f"Чтобы оплатить книгу, просто:\n"
+        f"— Отсканируй QR-код выше камерой телефона\n"
+        f"или\n"
+        f"— <a href='https://www.tinkoff.ru/rm/r_rPnohUIkbB.eRVktSOsDc/3Ioud12615'>Перейди по ссылке и оплати</a> картой или через СБП\n\n"
+        f"💳 Стоимость: {price} рублей\n\n"
+        f"После оплаты нажми кнопку «✅ Я оплатил»",
+        parse_mode="HTML"
+    )
+
+    builder = InlineKeyboardBuilder()
+    builder.button(text="✅ Я оплатил", callback_data="confirm_payment_started")
+    builder.adjust(1)
+    await callback.message.answer("Когда оплатишь — нажми кнопку:", reply_markup=builder.as_markup())
+
